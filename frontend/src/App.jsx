@@ -92,8 +92,12 @@ function App() {
             <ul>
               {/* Map over the items array and display each one */}
               {items.map(item => (
-                <li key={item.id}>{item.url}</li>
-              ))}
+  <li key={item.id}>
+    <a href={item.url} target="_blank" rel="noopener noreferrer">
+      {item.title || item.url} {/* Show title, but fallback to URL if title is missing */}
+    </a>
+  </li>
+))}
             </ul>
           )}
         </div>
