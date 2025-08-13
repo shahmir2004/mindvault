@@ -3,6 +3,7 @@ require('dotenv').config();
 
 // Import the Express library
 const express = require('express');
+const cors = require('cors'); // <-- 1. IMPORT CORS
 
 // Initialize an Express application
 const app = express();
@@ -12,6 +13,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // === MIDDLEWARE ===
+app.use(cors()); // <-- 2. USE CORS. This must be before your routes.
 // This allows our server to accept and parse JSON in request bodies
 app.use(express.json());
 
