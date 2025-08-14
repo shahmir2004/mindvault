@@ -94,6 +94,34 @@ app.post('/api/items', async (req, res) => {
   }
 });
 
+// === NEW ENDPOINT FOR SEARCHING ITEMS ===
+app.get('/api/search', async (req, res) => {
+  // Get the search query from the URL query parameters (e.g., /api/search?q=react)
+  const { q } = req.query;
+
+  if (!q) {
+    return res.status(400).json({ error: 'Search query "q" is required.' });
+  }
+
+  try {
+    // Call the database function we created
+    // .rpc() is how you call functions in Supabase
+    const { data, error } = await supabase.rpc('search_items', {
+      search_term: q
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    res.json(data);
+    
+  } catch (error) {
+    console.error('Error searching items:', error);
+    return res.status(500).json({ error: error.message });
+  }
+});
+
 // === START THE SERVER ===
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);

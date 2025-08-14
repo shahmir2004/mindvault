@@ -12,6 +12,13 @@ function App() {
   // State for the server status message
   const [serverStatus, setServerStatus] = useState('Checking server status...');
 
+  
+  // --- NEW STATE FOR SEARCH ---
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  const [isSearching, setIsSearching] = useState(false);
+  // --- END NEW STATE ---
+
   // Function to fetch all items from the server
   const fetchItems = () => {
     axios.get(`${API_URL}/api/items`)
@@ -64,6 +71,23 @@ function App() {
         alert("Failed to add item.");
       });
   };
+   // --- NEW FUNCTION TO HANDLE SEARCH ---
+  const handleSearch = (e) => {
+    e.preventDefault();
+    if (!searchQuery.trim()) {
+      setSearchResults([]); // Clear results if search is empty
+      return;
+    }
+    setIsSearching(true);
+    axios.get(`${API_URL}/api/search`, { params: { q: searchQuery } })
+      .then(response => {
+        setSearchResults(response.data);
+      })
+      .catch(error => console.error("Error searching:", error))
+      .finally(() => {
+        setIsSearching(false);
+      });
+  };
 
   return (
     <div>
@@ -84,22 +108,59 @@ function App() {
           <button type="submit">Save</button>
         </form>
 
-        <div className="items-list">
-          <h2>Saved Items</h2>
-          {items.length === 0 ? (
-            <p>No items saved yet.</p>
-          ) : (
-            <ul>
-              {/* Map over the items array and display each one */}
-              {items.map(item => (
-  <li key={item.id}>
-    <a href={item.url} target="_blank" rel="noopener noreferrer">
-      {item.title || item.url} {/* Show title, but fallback to URL if title is missing */}
-    </a>
-  </li>
-))}
-            </ul>
+         {/* --- NEW SEARCH FORM --- */}
+        <div className="search-area">
+          <h2>Search Your Vault</h2>
+          <form onSubmit={handleSearch}>
+            <input
+              type="text"
+              placeholder="Search for... (e.g., react hooks)"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button type="submit" disabled={isSearching}>
+              {isSearching ? 'Searching...' : 'Search'}
+            </button>
+          </form>
+        </div>
+        
+        {/* --- NEW RESULTS DISPLAY --- */}
+        <div className="results-container">
+          {searchQuery && ( // Only show this section if a search has been made
+            <div className="search-results">
+              <h3>Search Results for "{searchQuery}"</h3>
+              {isSearching ? <p>Loading...</p> : (
+                searchResults.length === 0 ? (
+                  <p>No results found.</p>
+                ) : (
+                  <ul>
+                    {searchResults.map(item => (
+                      <li key={item.id} className="search-result-item">
+                        <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
+                        {/* Use dangerouslySetInnerHTML to render the headline with highlights */}
+                        <p className="headline" dangerouslySetInnerHTML={{ __html: item.headline }}></p>
+                      </li>
+                    ))}
+                  </ul>
+                )
+              )}
+            </div>
           )}
+        </div>
+
+        <hr />
+
+        <div className="items-list">
+          <h2>All Saved Items ({items.length})</h2>
+          <ul>
+            {items.map(item => (
+              <li key={item.id}>
+                <a href={item.url} target="_blank" rel="noopener noreferrer">
+                  {item.title || item.url}
+                </a>
+              </li>
+            ))}
+          </ul>
         </div>
       </main>
     </div>
