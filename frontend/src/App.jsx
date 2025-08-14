@@ -1,170 +1,55 @@
+// frontend/src/App.jsx
+
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import { supabase } from './supabaseClient'; // The Supabase client for the frontend
+import Auth from './Auth'; // The component for the login/signup form
+import MindVaultApp from './MindVaultApp'; // The main application component for logged-in users
 
-// Define the API URL once, so we can reuse it
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+export default function App() {
+  // We will store the user's session information in state.
+  // It starts as null because we don't know if the user is logged in yet.
+  const [session, setSession] = useState(null);
 
-function App() {
-  // State for the list of items from our backend
-  const [items, setItems] = useState([]);
-  // State for the URL input field
-  const [newItemUrl, setNewItemUrl] = useState('');
-  // State for the server status message
-  const [serverStatus, setServerStatus] = useState('Checking server status...');
-
-  
-  // --- NEW STATE FOR SEARCH ---
-  const [searchQuery, setSearchQuery] = useState('');
-  const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
-  // --- END NEW STATE ---
-
-  // Function to fetch all items from the server
-  const fetchItems = () => {
-    axios.get(`${API_URL}/api/items`)
-      .then(response => {
-        // Update the items state with the data from the server
-        setItems(response.data);
-      })
-      .catch(error => {
-        console.error("Error fetching items:", error);
-      });
-  };
-
-  // useEffect hook to run on component mount
+  // The useEffect hook runs after the component mounts.
+  // It's perfect for setting up listeners or fetching initial data.
   useEffect(() => {
-    // Check server health
-    axios.get(`${API_URL}/api/health`)
-      .then(response => {
-        setServerStatus(`Server status: ${response.data.message}`);
-      })
-      .catch(error => {
-        console.error("Error fetching server status:", error);
-        setServerStatus('Error: Could not connect to the server.');
-      });
-    
-    // Also fetch all items when the component loads
-    fetchItems();
-  }, []); // The empty array [] means this effect runs only once
+    // 1. Check for an active session when the app loads.
+    // This handles the case where a user is already logged in and refreshes the page.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+    });
 
-  // Function to handle adding a new item
-  const handleAddItem = (e) => {
-    // Prevent the default form submission (which reloads the page)
-    e.preventDefault();
+    // 2. Set up a listener for authentication state changes.
+    // This is the magic part. It will fire whenever a user logs in, logs out,
+    // or their session is refreshed.
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      // The callback updates our state with the new session information.
+      // If the user logs out, `session` will be null.
+      setSession(session);
+    });
 
-    // Make sure the URL is not empty
-    if (!newItemUrl.trim()) {
-      alert("Please enter a URL");
-      return;
-    }
+    // 3. Cleanup function.
+    // This is returned from useEffect and will run when the component unmounts.
+    // It's crucial for preventing memory leaks by removing the auth listener.
+    return () => subscription.unsubscribe();
+  }, []); // The empty dependency array [] means this effect runs only once.
 
-    // Make a POST request to our new endpoint
-    axios.post(`${API_URL}/api/items`, { url: newItemUrl })
-      .then(response => {
-        // After successfully adding, fetch the updated list of items
-        fetchItems();
-        // Clear the input field
-        setNewItemUrl('');
-      })
-      .catch(error => {
-        console.error("Error adding item:", error);
-        alert("Failed to add item.");
-      });
-  };
-   // --- NEW FUNCTION TO HANDLE SEARCH ---
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) {
-      setSearchResults([]); // Clear results if search is empty
-      return;
-    }
-    setIsSearching(true);
-    axios.get(`${API_URL}/api/search`, { params: { q: searchQuery } })
-      .then(response => {
-        setSearchResults(response.data);
-      })
-      .catch(error => console.error("Error searching:", error))
-      .finally(() => {
-        setIsSearching(false);
-      });
-  };
-
+  // This is the render logic. It's a simple conditional (ternary) statement.
   return (
-    <div>
-      <header>
-        <h1>MindVault</h1>
-        <p>Your Personal Knowledge Search Engine</p>
-        <p><i>{serverStatus}</i></p>
-      </header>
-      <main>
-        {/* We use a form to handle submission */}
-        <form onSubmit={handleAddItem} className="capture-container">
-          <input
-            type="text"
-            placeholder="Paste a URL to save..."
-            value={newItemUrl}
-            onChange={(e) => setNewItemUrl(e.target.value)}
-          />
-          <button type="submit">Save</button>
-        </form>
-
-         {/* --- NEW SEARCH FORM --- */}
-        <div className="search-area">
-          <h2>Search Your Vault</h2>
-          <form onSubmit={handleSearch}>
-            <input
-              type="text"
-              placeholder="Search for... (e.g., react hooks)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button type="submit" disabled={isSearching}>
-              {isSearching ? 'Searching...' : 'Search'}
-            </button>
-          </form>
-        </div>
-        
-        {/* --- NEW RESULTS DISPLAY --- */}
-        <div className="results-container">
-          {searchQuery && ( // Only show this section if a search has been made
-            <div className="search-results">
-              <h3>Search Results for "{searchQuery}"</h3>
-              {isSearching ? <p>Loading...</p> : (
-                searchResults.length === 0 ? (
-                  <p>No results found.</p>
-                ) : (
-                  <ul>
-                    {searchResults.map(item => (
-                      <li key={item.id} className="search-result-item">
-                        <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
-                        {/* Use dangerouslySetInnerHTML to render the headline with highlights */}
-                        <p className="headline" dangerouslySetInnerHTML={{ __html: item.headline }}></p>
-                      </li>
-                    ))}
-                  </ul>
-                )
-              )}
-            </div>
-          )}
-        </div>
-
-        <hr />
-
-        <div className="items-list">
-          <h2>All Saved Items ({items.length})</h2>
-          <ul>
-            {items.map(item => (
-              <li key={item.id}>
-                <a href={item.url} target="_blank" rel="noopener noreferrer">
-                  {item.title || item.url}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </main>
+    <div className="container">
+      {/* If there is NO session, show the Auth component. */}
+      {!session ? (
+        <Auth />
+      ) : (
+        // If there IS a session, show the main MindVaultApp component.
+        // We pass the entire session object as a prop.
+        // We also pass a `key` prop with the user's ID. This is a React best-practice
+        // that ensures the component fully remounts if the user logs out and a
+        // different user logs in, preventing any state from leaking between users.
+        <MindVaultApp key={session.user.id} session={session} />
+      )}
     </div>
   );
 }
-
-export default App;
