@@ -8,10 +8,23 @@ const cheerio = require('cheerio');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-const vercelFrontendUrl = 'https://mindvault-delta.vercel.app/'; // <-- REPLACE with your actual Vercel URL
+const allowedOrigins = [
+  'https://mindvault-delta.vercel.app', // Your actual Vercel production URL
+  'http://localhost:5173'             // Your local development environment for testing
+];
+
 const corsOptions = {
-  origin: [vercelFrontendUrl, 'http://localhost:5173'], // Allow both production and local development
+  origin: function (origin, callback) {
+    // The `!origin` check allows for server-to-server requests or REST clients like Postman
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(new Error('This origin is not allowed by CORS policy.'));
+    }
+  },
+  optionsSuccessStatus: 200
 };
+
 app.use(cors(corsOptions));
 app.use(express.json());
 
