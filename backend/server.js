@@ -40,7 +40,7 @@ const authMiddleware = async (req, res, next) => {
 
   // 1. Create a temporary Supabase client with the user's token
   // This client will have the user's permissions, NOT admin permissions.
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY, {
+  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY, {
     global: {
       headers: { Authorization: `Bearer ${token}` }
     }
@@ -111,6 +111,8 @@ app.post('/api/items', async (req, res) => {
     res.status(500).json({ error: `Failed to process URL. ${error.message}` });
   }
 });
+
+aoo
 
 // SEARCH ITEMS (Now uses the user-scoped client)
 app.get('/api/search', async (req, res) => {
