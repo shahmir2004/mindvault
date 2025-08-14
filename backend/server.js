@@ -112,7 +112,7 @@ app.post('/api/items', async (req, res) => {
   }
 });
 
-aoo
+
 
 // SEARCH ITEMS (Now uses the user-scoped client)
 app.get('/api/search', async (req, res) => {
