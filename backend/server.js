@@ -8,7 +8,11 @@ const cheerio = require('cheerio');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-app.use(cors());
+const vercelFrontendUrl = 'https://mindvault-delta.vercel.app/'; // <-- REPLACE with your actual Vercel URL
+const corsOptions = {
+  origin: [vercelFrontendUrl, 'http://localhost:5173'], // Allow both production and local development
+};
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // --- NEW AUTHENTICATION MIDDLEWARE ---
