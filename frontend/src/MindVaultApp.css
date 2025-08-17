@@ -107,10 +107,10 @@
   transition: all var(--transition-speed) ease;
 }
 .action-card:hover {
-  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) scale(1.01);
-  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3);
+  transform: translateY(-4px); /* A subtle "lift" effect */
+  border-color: var(--color-glow-border); /* Activates a soft, glowing border */
+  box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.3); /* An enhanced shadow for more depth */
 }
-
 .card-title {
   display: flex;
   align-items: center;
