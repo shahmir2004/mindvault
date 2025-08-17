@@ -1,20 +1,26 @@
 /* frontend/src/index.css */
 
-/* --- THEME & COLOR PALETTE --- */
+/* --- "CELESTIAL GLASS" DESIGN SYSTEM --- */
 :root {
   --font-family: 'Inter', sans-serif;
-  --background-start: #111827; /* Deep blue-gray */
-  --background-end: #1f2937; /* Lighter gray */
-  --surface-color: rgba(31, 41, 55, 0.6); /* Semi-transparent surface */
-  --surface-hover: rgba(55, 65, 81, 0.7);
-  --glass-blur: 10px;
-  --border-color: rgba(255, 255, 255, 0.1);
-  --text-primary: #f9fafb;
-  --text-secondary: #d1d5db;
-  --text-tertiary: #9ca3af;
-  --gradient-start: #3b82f6; /* Blue */
-  --gradient-end: #8b5cf6;   /* Purple */
-  --shadow-color: rgba(0, 0, 0, 0.2);
+  
+  /* Palette */
+  --color-background: #0D1117; /* Space Cadet */
+  --color-surface: rgba(13, 17, 23, 0.5); /* Semi-transparent base */
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-glow-border: rgba(56, 122, 223, 0.5);
+  
+  --color-text-primary: #E6EDF3;
+  --color-text-secondary: #8B949E;
+  
+  --color-accent-blue: #387ADF;
+  --color-accent-purple: #7C3AED;
+  --color-accent-pink: #DB2777;
+
+  /* UI Properties */
+  --glass-blur: 16px;
+  --border-radius: 12px;
+  --transition-speed: 0.3s;
 }
 
 /* --- RESETS & GLOBAL STYLES --- */
@@ -26,14 +32,18 @@
 
 body {
   font-family: var(--font-family);
-  color: var(--text-primary);
-  background: linear-gradient(135deg, var(--background-start), var(--background-end));
+  color: var(--color-text-primary);
+  background-color: var(--color-background);
+  background-image:
+    radial-gradient(ellipse 80% 80% at 50% -20%,rgba(120, 119, 198, 0.3), transparent),
+    radial-gradient(ellipse 80% 80% at 20% -30%,rgba(38, 129, 235, 0.2), transparent),
+    radial-gradient(ellipse 80% 80% at 90% -10%,rgba(219, 39, 119, 0.2), transparent);
   background-size: 200% 200%;
-  animation: gradient-animation 15s ease infinite;
+  animation: aurora-animation 20s ease infinite;
   overflow-x: hidden;
 }
 
-@keyframes gradient-animation {
+@keyframes aurora-animation {
   0% { background-position: 0% 50%; }
   50% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
@@ -45,67 +55,49 @@ body {
   min-height: 100vh;
 }
 
-/* --- CUSTOM SCROLLBAR --- */
-::-webkit-scrollbar {
-  width: 8px;
-}
-::-webkit-scrollbar-track {
-  background: var(--background-start);
-}
-::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-}
-::-webkit-scrollbar-thumb:hover {
-  background: #555;
-}
-
 /* --- REUSABLE COMPONENTS --- */
 .input-field {
   width: 100%;
   padding: 12px 16px;
-  background-color: rgba(0, 0, 0, 0.2);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-primary);
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 1px solid var(--color-glass-border);
+  border-radius: var(--border-radius);
+  color: var(--color-text-primary);
   font-size: 1rem;
   font-family: var(--font-family);
-  transition: all 0.2s ease;
+  transition: all var(--transition-speed) ease;
 }
 .input-field::placeholder {
-  color: var(--text-tertiary);
+  color: var(--color-text-secondary);
 }
 .input-field:focus {
   outline: none;
-  border-color: var(--gradient-start);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  border-color: var(--color-accent-blue);
+  box-shadow: 0 0 0 4px rgba(56, 122, 223, 0.3);
 }
 
 .btn {
-  padding: 12px 20px;
-  border-radius: 8px;
+  padding: 12px 24px;
+  border-radius: var(--border-radius);
   border: none;
   font-size: 1rem;
   font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all var(--transition-speed) ease;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 8px;
-  background-image: linear-gradient(to right, var(--gradient-start) 0%, var(--gradient-end) 51%, var(--gradient-start) 100%);
-  background-size: 200% auto;
   color: white;
+  background: linear-gradient(90deg, var(--color-accent-blue), var(--color-accent-purple));
   box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.2);
 }
 .btn:hover {
-  background-position: right center;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px 0 rgba(0, 0, 0, 0.3);
 }
 .btn:disabled {
-  background-image: none;
-  background-color: var(--surface-color);
+  background: var(--color-glass-border);
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
