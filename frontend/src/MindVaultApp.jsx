@@ -1,182 +1,177 @@
 // frontend/src/MindVaultApp.jsx
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
-import { supabase } from './supabaseClient'; // Import supabase client to use its methods
+import { supabase } from './supabaseClient';
+import toast from 'react-hot-toast';
+import { FiLogOut, FiPlus, FiSearch, FiFileText, FiAlertCircle } from 'react-icons/fi';
 
-// This is the URL of our backend API
+import './MindVaultApp.css';
+import './Loader.css'; // Assuming you have the loader css
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
-// This is a CRITICAL helper function.
-// It creates an instance of axios that automatically includes the user's
-// authentication token in the headers of every request.
 const getAuthenticatedAxios = (session) => {
-  return axios.create({
-    headers: {
-      'Authorization': `Bearer ${session.access_token}`
-    }
-  });
+  return axios.create({ headers: { 'Authorization': `Bearer ${session.access_token}` } });
 };
 
+// Reusable components for cleaner JSX
+const Loader = () => <div className="loader"></div>;
+const EmptyState = ({ icon, title, message }) => (
+  <div className="empty-state">
+    <div className="empty-state-icon">{icon}</div>
+    <h3>{title}</h3>
+    <p>{message}</p>
+  </div>
+);
+
 export default function MindVaultApp({ session }) {
-  // State for the main list of all saved items
   const [items, setItems] = useState([]);
-  // State for the text in the "add new URL" input field
   const [newItemUrl, setNewItemUrl] = useState('');
-  
-  // State for the text in the search input field
   const [searchQuery, setSearchQuery] = useState('');
-  // State for the list of items returned by a search
   const [searchResults, setSearchResults] = useState([]);
-  // State to manage the loading status of the search button
+  const [hasSearched, setHasSearched] = useState(false);
+  
+  const [isLoadingItems, setIsLoadingItems] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
 
-  // We create an authenticated axios instance using the session passed as a prop
-  const authenticatedAxios = getAuthenticatedAxios(session);
+  const authenticatedAxios = useMemo(() => getAuthenticatedAxios(session), [session]);
 
-  // --- DATA FETCHING AND ACTIONS ---
-
-  // Fetches all items for the logged-in user
   const fetchItems = () => {
+    setIsLoadingItems(true);
     authenticatedAxios.get(`${API_URL}/api/items`)
-      .then(response => {
-        setItems(response.data);
-      })
-      .catch(error => {
-        console.error("Error fetching items:", error);
-        alert("Could not fetch your saved items. Please try again.");
-      });
+      .then(response => setItems(response.data))
+      .catch(() => toast.error("Could not fetch your saved items."))
+      .finally(() => setIsLoadingItems(false));
   };
 
-  // This useEffect hook runs once when the component is first loaded.
-  // Its job is to fetch the initial list of items for the user.
-  useEffect(() => {
-    fetchItems();
-  }, [session]); // The dependency array ensures this runs again if the session changes
+  useEffect(() => { fetchItems(); }, [authenticatedAxios]);
 
-  // Handles the form submission for adding a new item
   const handleAddItem = (e) => {
-    e.preventDefault(); // Prevents the browser from reloading the page
-    if (!newItemUrl.trim()) return alert("Please enter a URL");
-
-    authenticatedAxios.post(`${API_URL}/api/items`, { url: newItemUrl })
-      .then(() => {
-        fetchItems(); // After adding, we re-fetch the list to show the new item
-        setNewItemUrl(''); // Clear the input field
-      })
-      .catch(error => {
-        console.error("Error adding item:", error);
-        alert(`Failed to add item. The server said: ${error.response?.data?.error || error.message}`);
-      });
+    e.preventDefault();
+    if (!newItemUrl.trim()) return toast.error("Please enter a URL");
+    
+    setIsSaving(true);
+    const promise = authenticatedAxios.post(`${API_URL}/api/items`, { url: newItemUrl });
+    toast.promise(promise, {
+      loading: 'Scraping and saving...',
+      success: (response) => {
+        fetchItems();
+        setNewItemUrl('');
+        return `Saved: ${response.data.title || response.data.url}`;
+      },
+      error: (err) => `Error: ${err.response?.data?.error || err.message}`
+    }).finally(() => setIsSaving(false));
   };
 
-  // Handles the form submission for searching items
   const handleSearch = (e) => {
     e.preventDefault();
+    setHasSearched(true);
     if (!searchQuery.trim()) {
-      setSearchResults([]); // Clear results if the search query is empty
+      setSearchResults([]);
       return;
     }
     setIsSearching(true);
     authenticatedAxios.get(`${API_URL}/api/search`, { params: { q: searchQuery } })
-      .then(response => {
-        setSearchResults(response.data);
-      })
-      .catch(error => {
-        console.error("Error searching:", error);
-        alert("An error occurred while searching.");
-      })
-      .finally(() => {
-        setIsSearching(false); // Stop the loading state regardless of outcome
-      });
+      .then(response => setSearchResults(response.data))
+      .catch(() => toast.error("An error occurred while searching."))
+      .finally(() => setIsSearching(false));
   };
   
-  // Handles logging the user out
   const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error logging out:', error);
-    }
-    // The main App.jsx component will detect the session change and show the Auth page.
+    await supabase.auth.signOut();
+    toast.success('Logged out successfully.');
   };
 
-  // --- JSX RENDER ---
-
-  return (
-    <div>
-      <header>
-        <h1>MindVault</h1>
-        <div className="user-info">
-          <span>Welcome, {session.user.email}!</span>
-          <button className="logout-button" onClick={handleLogout}>Logout</button>
-        </div>
-      </header>
-      
-      <main>
-        <form onSubmit={handleAddItem} className="capture-container">
-          <input
-            type="text"
-            placeholder="Paste a URL to save..."
-            value={newItemUrl}
-            onChange={(e) => setNewItemUrl(e.target.value)}
-          />
-          <button type="submit">Save</button>
-        </form>
-
-        <hr />
-
-        <div className="search-area">
-          <h2>Search Your Vault</h2>
-          <form onSubmit={handleSearch}>
-            <input
-              type="text"
-              placeholder="Search for... (e.g., react hooks)"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <button type="submit" disabled={isSearching}>
-              {isSearching ? 'Searching...' : 'Search'}
-            </button>
-          </form>
-        </div>
-        
-        <div className="results-container">
-          {searchQuery && (
-            <div className="search-results">
-              <h3>Search Results for "{searchQuery}"</h3>
-              {isSearching ? <p>Loading...</p> : (
-                searchResults.length === 0 ? (
-                  <p>No results found.</p>
-                ) : (
-                  <ul>
-                    {searchResults.map(item => (
-                      <li key={item.id} className="search-result-item">
-                        <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
-                        <p className="headline" dangerouslySetInnerHTML={{ __html: item.headline }}></p>
-                      </li>
-                    ))}
-                  </ul>
-                )
-              )}
-            </div>
-          )}
-        </div>
-
-        <hr />
-
-        <div className="items-list">
-          <h2>All Saved Items ({items.length})</h2>
-          <ul>
-            {items.map(item => (
-              <li key={item.id}>
-                <a href={item.url} target="_blank" rel="noopener noreferrer">
-                  {item.title || item.url}
-                </a>
+  const renderContent = () => {
+    if (hasSearched) {
+      if (isSearching) return <Loader />;
+      if (searchResults.length > 0) {
+        return (
+          <ul className="search-results-list">
+            {searchResults.map((item, index) => (
+              <li key={item.id} className="list-item" style={{ animationDelay: `${index * 50}ms` }}>
+                <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title}</a>
+                <p className="item-headline" dangerouslySetInnerHTML={{ __html: item.headline }} />
               </li>
             ))}
           </ul>
+        );
+      }
+      return <EmptyState icon={<FiAlertCircle />} title="No Results Found" message={`Your search for "${searchQuery}" did not return any results.`} />;
+    }
+
+    if (isLoadingItems) return <Loader />;
+    if (items.length > 0) {
+      return (
+        <ul className="items-list">
+          {items.map((item, index) => (
+            <li key={item.id} className="list-item" style={{ animationDelay: `${index * 50}ms` }}>
+              <a href={item.url} target="_blank" rel="noopener noreferrer">{item.title || item.url}</a>
+            </li>
+          ))}
+        </ul>
+      );
+    }
+    return <EmptyState icon={<FiFileText />} title="Your Vault is Empty" message="Save your first article or video using the form on the left." />;
+  };
+
+  return (
+    <div className="app-shell">
+      <header className="app-header">
+        <div className="logo">MindVault</div>
+        <div className="user-info">
+          <div className="user-avatar">{session.user.email[0].toUpperCase()}</div>
+          <div className="user-email">{session.user.email}</div>
+          <button title="Logout" className="logout-button" onClick={handleLogout}>
+            <FiLogOut size={20} />
+          </button>
         </div>
-      </main>
+      </header>
+      
+      <div className="app-grid">
+        <aside className="sidebar">
+          <div className="action-card">
+            <h2 className="card-title"><FiPlus /> Save New Knowledge</h2>
+            <form onSubmit={handleAddItem}>
+              <div className="input-group">
+                <input
+                  className="input-field"
+                  placeholder="Paste a URL..."
+                  value={newItemUrl}
+                  onChange={(e) => setNewItemUrl(e.target.value)}
+                  disabled={isSaving}
+                />
+                <button type="submit" className="btn" disabled={isSaving}>
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <div className="action-card">
+            <h2 className="card-title"><FiSearch /> Search Your Vault</h2>
+            <form onSubmit={handleSearch}>
+              <div className="input-group">
+                <input
+                  className="input-field"
+                  placeholder="Search content..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  disabled={isSearching}
+                />
+                <button type="submit" className="btn" disabled={isSearching}>
+                  {isSearching ? '...' : 'Go'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </aside>
+
+        <main className="content-card">
+          {renderContent()}
+        </main>
+      </div>
     </div>
   );
 }

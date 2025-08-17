@@ -1,0 +1,112 @@
+/* frontend/src/index.css */
+
+/* --- THEME & COLOR PALETTE --- */
+:root {
+  --font-family: 'Inter', sans-serif;
+  --background-start: #111827; /* Deep blue-gray */
+  --background-end: #1f2937; /* Lighter gray */
+  --surface-color: rgba(31, 41, 55, 0.6); /* Semi-transparent surface */
+  --surface-hover: rgba(55, 65, 81, 0.7);
+  --glass-blur: 10px;
+  --border-color: rgba(255, 255, 255, 0.1);
+  --text-primary: #f9fafb;
+  --text-secondary: #d1d5db;
+  --text-tertiary: #9ca3af;
+  --gradient-start: #3b82f6; /* Blue */
+  --gradient-end: #8b5cf6;   /* Purple */
+  --shadow-color: rgba(0, 0, 0, 0.2);
+}
+
+/* --- RESETS & GLOBAL STYLES --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-family);
+  color: var(--text-primary);
+  background: linear-gradient(135deg, var(--background-start), var(--background-end));
+  background-size: 200% 200%;
+  animation: gradient-animation 15s ease infinite;
+  overflow-x: hidden;
+}
+
+@keyframes gradient-animation {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* --- CUSTOM SCROLLBAR --- */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--background-start);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+/* --- REUSABLE COMPONENTS --- */
+.input-field {
+  width: 100%;
+  padding: 12px 16px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 1rem;
+  font-family: var(--font-family);
+  transition: all 0.2s ease;
+}
+.input-field::placeholder {
+  color: var(--text-tertiary);
+}
+.input-field:focus {
+  outline: none;
+  border-color: var(--gradient-start);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+}
+
+.btn {
+  padding: 12px 20px;
+  border-radius: 8px;
+  border: none;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background-image: linear-gradient(to right, var(--gradient-start) 0%, var(--gradient-end) 51%, var(--gradient-start) 100%);
+  background-size: 200% auto;
+  color: white;
+  box-shadow: 0 4px 15px 0 rgba(0, 0, 0, 0.2);
+}
+.btn:hover {
+  background-position: right center;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.25);
+}
+.btn:disabled {
+  background-image: none;
+  background-color: var(--surface-color);
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
