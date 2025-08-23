@@ -1,19 +1,5 @@
 {
-  "version": 2,
-  "builds": [
-    {
-      "src": "frontend/package.json",
-      "use": "@vercel/vite",
-      "config": {
-        "project": "frontend",
-        "distDir": "frontend/dist"
-      }
-    }
-  ],
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
+    { "source": "/:path((?!.*\\.).*)", "destination": "/index.html" }
   ]
 }
