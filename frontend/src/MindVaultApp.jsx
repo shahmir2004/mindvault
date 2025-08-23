@@ -42,10 +42,11 @@ export default function MindVaultApp({ session }) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [hasSearched, setHasSearched] = useState(false);
-  
+
   const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const authenticatedAxios = useMemo(() => getAuthenticatedAxios(session), [session]);
 
@@ -62,7 +63,7 @@ export default function MindVaultApp({ session }) {
   const handleAddItem = (e) => {
     e.preventDefault();
     if (!newItemUrl.trim()) return toast.error("Please enter a URL");
-    
+
     setIsSaving(true);
     const promise = authenticatedAxios.post(`${API_URL}/api/items`, { url: newItemUrl });
     toast.promise(promise, {
@@ -80,16 +81,28 @@ export default function MindVaultApp({ session }) {
     e.preventDefault();
     setHasSearched(true);
     if (!searchQuery.trim()) { setSearchResults([]); return; }
-    
+
     setIsSearching(true);
     authenticatedAxios.get(`${API_URL}/api/search`, { params: { q: searchQuery } })
       .then(response => setSearchResults(response.data))
       .catch(() => toast.error("An error occurred while searching."))
       .finally(() => setIsSearching(false));
   };
-  
-  const handleLogout = async () => { await supabase.auth.signOut(); toast.success('Logged out successfully.'); };
 
+  const handleLogout = async () => {
+  setIsLoggingOut(true);
+  const { error } = await supabase.auth.signOut();
+
+  // We only care about unexpected errors.
+  // The 403 error is expected if the session is already expired, so we don't need to show it.
+  // The onAuthStateChange listener will handle the redirect regardless.
+  if (error && error.message !== 'Auth session missing!') {
+    toast.error("Failed to log out.");
+    console.error("Logout Error: ", error);
+    setIsLoggingOut(false);
+  }
+  // No need for a success toast or navigation here. The listener in App.jsx handles it all.
+};
   const renderContent = () => {
     const displayItems = hasSearched ? searchResults : items;
     const isLoading = hasSearched ? isSearching : isLoadingItems;
@@ -118,10 +131,12 @@ export default function MindVaultApp({ session }) {
         <div className="user-info">
           <div className="user-avatar">{session.user.email[0].toUpperCase()}</div>
           <div className="user-email">{session.user.email}</div>
-          <button title="Logout" className="logout-button" onClick={handleLogout}><FiLogOut size={20} /></button>
+          <button type="button" title="Logout" className="logout-button" onClick={handleLogout} disabled={isLoggingOut}>
+            <FiLogOut size={20} />
+          </button>
         </div>
       </header>
-      
+
       <div className="app-grid">
         <aside className="sidebar" style={{ transform: 'translateY(20px)' }}>
           <div className="action-card">
@@ -134,7 +149,7 @@ export default function MindVaultApp({ session }) {
                 onChange={(e) => setNewItemUrl(e.target.value)}
                 disabled={isSaving}
               />
-              <button type="submit" className="btn" style={{width: '100%'}} disabled={isSaving}>
+              <button type="submit" className="btn" style={{ width: '100%' }} disabled={isSaving}>
                 {isSaving ? 'Saving...' : 'Save to Vault'}
               </button>
             </form>
@@ -151,7 +166,7 @@ export default function MindVaultApp({ session }) {
                   disabled={isSearching}
                 />
                 <button type="submit" className="search-btn" disabled={isSearching} aria-label="Search">
-                  {isSearching ? <FiLoader style={{animation: 'spin 1s linear infinite'}}/> : <FiSearch />}
+                  {isSearching ? <FiLoader style={{ animation: 'spin 1s linear infinite' }} /> : <FiSearch />}
                 </button>
               </div>
             </form>
