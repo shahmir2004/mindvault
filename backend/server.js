@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 5000;
 
 // --- CORS CONFIGURATION (Use your verified one) ---
 const allowedOrigins = [
-  'https://mindvault-delta.vercel.app',
+  'https://mindvault-zeta.vercel.app',
   'http://localhost:5173'
 ];
 const corsOptions = {
