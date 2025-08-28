@@ -1,12 +1,17 @@
 /* frontend/src/Auth.css */
+
+/* Main container for perfect centering */
 .auth-container {
+  width: 100vw;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 100vh;
-  padding: 2rem 1rem;
+  padding: 20px;
+  margin: 0;
   position: relative;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* Floating Background Elements */
@@ -39,21 +44,21 @@
 }
 
 .auth-card {
-  width: 100%;
-  max-width: 450px;
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 24px;
-  padding: 3rem;
+  border-radius: 20px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
   text-align: center;
   backdrop-filter: blur(20px);
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   position: relative;
   z-index: 2;
+  box-sizing: border-box;
+  margin: 0;
 }
 
 .auth-header {
-  margin-bottom: 2.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .auth-logo {
@@ -61,23 +66,23 @@
   align-items: center;
   justify-content: center;
   gap: 0.75rem;
-  font-size: 2.5rem;
+  font-size: 2rem;
   font-weight: 800;
   background: linear-gradient(135deg, var(--color-accent-blue), var(--color-accent-purple));
   background-clip: text;
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
 }
 
 .logo-icon {
-  font-size: 2rem;
+  font-size: 1.75rem;
   color: var(--color-accent-blue);
 }
 
 .auth-subtitle {
   color: var(--color-text-secondary);
-  font-size: 1.1rem;
+  font-size: 1rem;
   margin: 0;
   opacity: 0.9;
 }
@@ -85,8 +90,8 @@
 .auth-form {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
 }
 
 .form-group {
@@ -97,7 +102,7 @@
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.5rem;
   font-weight: 600;
   color: var(--color-text-primary);
   font-size: 0.9rem;
@@ -136,12 +141,12 @@
   background: linear-gradient(135deg, var(--color-accent-blue), var(--color-accent-purple));
   border: none;
   color: white;
-  font-size: 1.1rem;
-  padding: 1rem 2rem;
+  font-size: 1rem;
+  padding: 0.875rem 2rem;
   border-radius: 12px;
   box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
   transition: all 0.3s ease;
-  margin-top: 0.5rem;
+  margin-top: 0.25rem;
 }
 
 .auth-submit-btn:hover:not(:disabled) {
@@ -178,7 +183,7 @@
   padding: 0.75rem;
   border-radius: 8px;
   transition: all 0.3s ease;
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .auth-toggle-btn:hover {
@@ -231,18 +236,21 @@
 }
 
 /* Responsive Design */
-@media (max-width: 600px) {
+@media (max-width: 768px) {
   .auth-container {
-    padding: 1rem;
+    padding: 15px;
   }
   
   .auth-card {
-    padding: 2rem;
-    border-radius: 20px;
+    padding: 1.5rem;
+    border-radius: 16px;
+    max-width: 100%;
+    width: 100%;
+    transform: translateY(-3vh);
   }
   
   .auth-logo {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
   
   .auth-features {
@@ -253,4 +261,65 @@
   .auth-orb-1, .auth-orb-2 {
     display: none; /* Hide orbs on mobile for performance */
   }
+}
+
+@media (max-width: 480px) {
+  .auth-container {
+    padding: 10px;
+  }
+  
+  .auth-card {
+    padding: 1.25rem;
+    border-radius: 12px;
+    transform: translateY(-2vh);
+  }
+  
+  .auth-logo {
+    font-size: 1.5rem;
+  }
+}
+
+/* Handle short screens and landscape orientation */
+@media (max-height: 600px) {
+  .auth-container {
+    align-items: flex-start;
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+}
+
+/* Laptop-specific optimizations */
+@media (min-width: 1024px) and (min-height: 768px) {
+  .auth-container {
+    padding: 20px;
+  }
+  
+  .auth-card {
+    width: 480px;
+    padding: 2.5rem;
+    margin: 0;
+    transform: translateY(-3vh);
+  }
+  
+  .auth-logo {
+    font-size: 2.25rem;
+  }
+}
+
+/* Desktop optimization for larger screens */
+@media (min-width: 1440px) {
+  .auth-card {
+    width: 520px;
+    padding: 3rem;
+    transform: translateY(-2vh);
+  }
+}
+
+#auth-particles {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
 }

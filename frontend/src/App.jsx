@@ -7,6 +7,7 @@ import { Toaster } from 'react-hot-toast';
 import LandingPage from './LandingPage';
 import Auth from './Auth';
 import MindVaultApp from './MindVaultApp';
+import Navbar from './Navbar';
 import './index.css';
 
 export default function App() {
@@ -35,6 +36,7 @@ export default function App() {
     <>
       <Toaster position="top-center" reverseOrder={false} />
       <BrowserRouter>
+        <Navbar session={session} />
         <Routes>
           <Route path="/" element={<LandingPage session={session} />} />
           <Route path="/login" element={!session ? <Auth /> : <Navigate to="/app" replace />} />
