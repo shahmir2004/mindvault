@@ -1,9 +1,10 @@
 // frontend/src/MindVaultApp.jsx
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
+import { motion } from 'framer-motion';
 import { supabase } from './supabaseClient';
 import toast from 'react-hot-toast';
-import { FiLogOut, FiPlus, FiSearch, FiFileText, FiAlertCircle, FiLoader } from 'react-icons/fi';
+import { FiLogOut, FiPlus, FiSearch, FiFileText, FiAlertCircle, FiLoader, FiCpu, FiUser, FiBookmark, FiTrendingUp } from 'react-icons/fi';
 
 import './MindVaultApp.css';
 
@@ -126,21 +127,66 @@ export default function MindVaultApp({ session }) {
 
   return (
     <div className="app-shell">
-      <header className="app-header">
-        <div className="logo">MindVault</div>
-        <div className="user-info">
-          <div className="user-avatar">{session.user.email[0].toUpperCase()}</div>
-          <div className="user-email">{session.user.email}</div>
-          <button type="button" title="Logout" className="logout-button" onClick={handleLogout} disabled={isLoggingOut}>
-            <FiLogOut size={20} />
-          </button>
+      {/* Enhanced Header */}
+      <motion.header 
+        className="app-header"
+        initial={{ y: -70 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        <div className="header-left">
+          <div className="logo">
+            <FiCpu className="logo-icon" />
+            MindVault
+          </div>
+          <div className="header-stats">
+            <div className="stat-item">
+              <FiBookmark />
+              <span>{items.length} saved</span>
+            </div>
+          </div>
         </div>
-      </header>
+        <div className="user-info">
+          <div className="user-details">
+            <div className="user-avatar">
+              <FiUser />
+            </div>
+            <div className="user-text">
+              <div className="user-name">Welcome back!</div>
+              <div className="user-email">{session.user.email}</div>
+            </div>
+          </div>
+          <motion.button 
+            type="button" 
+            title="Sign Out" 
+            className="logout-button" 
+            onClick={handleLogout} 
+            disabled={isLoggingOut}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            <FiLogOut size={18} />
+          </motion.button>
+        </div>
+      </motion.header>
 
       <div className="app-grid">
-        <aside className="sidebar" style={{ transform: 'translateY(20px)' }}>
-          <div className="action-card">
-            <h2 className="card-title"><FiPlus /> Save New Knowledge</h2>
+        {/* Enhanced Sidebar */}
+        <motion.aside 
+          className="sidebar"
+          initial={{ x: -300, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+        >
+          <motion.div 
+            className="action-card save-card"
+            whileHover={{ y: -2, scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <h2 className="card-title">
+              <FiPlus /> 
+              Save New Knowledge
+            </h2>
             <form className="action-form" onSubmit={handleAddItem}>
               <input
                 className="input-field"
@@ -149,13 +195,35 @@ export default function MindVaultApp({ session }) {
                 onChange={(e) => setNewItemUrl(e.target.value)}
                 disabled={isSaving}
               />
-              <button type="submit" className="btn" style={{ width: '100%' }} disabled={isSaving}>
-                {isSaving ? 'Saving...' : 'Save to Vault'}
+              <button 
+                type="submit" 
+                className="btn btn-primary save-btn" 
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <div className="loading-spinner"></div>
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <FiPlus />
+                    Save to Vault
+                  </>
+                )}
               </button>
             </form>
-          </div>
-          <div className="action-card">
-            <h2 className="card-title"><FiSearch /> Search Your Vault</h2>
+          </motion.div>
+
+          <motion.div 
+            className="action-card search-card"
+            whileHover={{ y: -2, scale: 1.02 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            <h2 className="card-title">
+              <FiSearch /> 
+              Search Your Vault
+            </h2>
             <form onSubmit={handleSearch}>
               <div className="search-input-wrapper">
                 <input
@@ -165,19 +233,66 @@ export default function MindVaultApp({ session }) {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   disabled={isSearching}
                 />
-                <button type="submit" className="search-btn" disabled={isSearching} aria-label="Search">
-                  {isSearching ? <FiLoader style={{ animation: 'spin 1s linear infinite' }} /> : <FiSearch />}
+                <button 
+                  type="submit" 
+                  className="search-btn" 
+                  disabled={isSearching} 
+                  aria-label="Search"
+                >
+                  {isSearching ? (
+                    <FiLoader className="spinning" />
+                  ) : (
+                    <FiSearch />
+                  )}
                 </button>
               </div>
             </form>
-          </div>
-        </aside>
+          </motion.div>
+        </motion.aside>
 
-        <main className="main-content" style={{ transform: 'translateY(20px)' }}>
-          <div className="action-card">
-            {renderContent()}
+        {/* Enhanced Main Content */}
+        <motion.main 
+          className="main-content"
+          initial={{ x: 300, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+        >
+          <div className="content-header">
+            <h1 className="content-title">
+              {hasSearched ? (
+                <>
+                  <FiSearch />
+                  Search Results for "{searchQuery}"
+                </>
+              ) : (
+                <>
+                  <FiBookmark />
+                  Your Knowledge Vault
+                </>
+              )}
+            </h1>
+            {hasSearched && (
+              <button 
+                className="btn btn-secondary clear-search-btn"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setHasSearched(false);
+                }}
+              >
+                Clear Search
+              </button>
+            )}
           </div>
-        </main>
+          
+          <motion.div 
+            className="action-card content-card"
+            whileHover={{ y: -2 }}
+            transition={{ type: "spring", stiffness: 300 }}
+          >
+            {renderContent()}
+          </motion.div>
+        </motion.main>
       </div>
     </div>
   );

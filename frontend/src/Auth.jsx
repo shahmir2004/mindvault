@@ -1,14 +1,22 @@
 // frontend/src/Auth.jsx
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import Particles from 'react-tsparticles';
+import { loadFull } from 'tsparticles';
+import { FiMail, FiLock, FiEye, FiEyeOff, FiCpu, FiArrowRight } from 'react-icons/fi';
 import { supabase } from './supabaseClient';
 import toast from 'react-hot-toast';
 import './Auth.css';
+import { particlesOptions } from './particlesConfig';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false); // State to toggle password view
+  const [showPassword, setShowPassword] = useState(false);
+  const [showPasswordInput, setShowPasswordInput] = useState(false);
+  
+  const particlesInit = useCallback(async (engine) => { await loadFull(engine); }, []);
 
   const handleMagicLinkLogin = async (e) => {
     e.preventDefault();
@@ -40,13 +48,53 @@ export default function Auth() {
 
   return (
     <div className="auth-container">
-      <div className="auth-card">
-        <h1 className="auth-logo">MindVault</h1>
-        <p className="subtitle">Sign in or create an account.</p>
+      <Particles id="auth-particles" init={particlesInit} options={particlesOptions} />
+      
+      {/* Floating Background Elements */}
+      <div className="auth-background-elements">
+        <div className="floating-orb auth-orb-1"></div>
+        <div className="floating-orb auth-orb-2"></div>
+      </div>
+
+      <motion.div 
+        className="auth-card"
+        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+      >
+        {/* Auth Header */}
+        <div className="auth-header">
+          <motion.div 
+            className="auth-logo"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2, duration: 0.8 }}
+          >
+            <FiCpu className="logo-icon" />
+            MindVault
+          </motion.div>
+          <motion.p 
+            className="auth-subtitle"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.4, duration: 0.8 }}
+          >
+            Access your digital brain
+          </motion.p>
+        </div>
         
-        <form className="auth-form" onSubmit={handleMagicLinkLogin}>
+        <motion.form 
+          className="auth-form" 
+          onSubmit={showPasswordInput ? handlePasswordLogin : handleMagicLinkLogin}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.6, duration: 0.8 }}
+        >
           <div className="form-group">
-            <label htmlFor="email">Email</label>
+            <label htmlFor="email">
+              <FiMail className="label-icon" />
+              Email Address
+            </label>
             <input
               id="email"
               className="input-field"
@@ -58,40 +106,75 @@ export default function Auth() {
             />
           </div>
 
-          {/* Conditionally render the password section */}
-          {showPassword ? (
-            <div className="password-section">
-              <div className="form-group">
-                <label htmlFor="password">Password</label>
+          {showPasswordInput && (
+            <motion.div 
+              className="form-group"
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              transition={{ duration: 0.3 }}
+            >
+              <label htmlFor="password">
+                <FiLock className="label-icon" />
+                Password
+              </label>
+              <div className="password-input-wrapper">
                 <input
                   id="password"
                   className="input-field"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+                <button
+                  type="button"
+                  className="password-toggle"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
               </div>
-              <button className="btn" disabled={loading} onClick={handlePasswordLogin}>
-                {loading ? 'Processing...' : 'Sign In with Password'}
-              </button>
-            </div>
-          ) : (
-            <button className="btn" disabled={loading}>
-              {loading ? 'Sending...' : 'Continue with Email'}
-            </button>
+            </motion.div>
           )}
-        </form>
 
-        <button 
-          className="toggle-password-view"
-          onClick={() => setShowPassword(!showPassword)}
+          <button className="btn btn-primary auth-submit-btn" disabled={loading}>
+            {loading ? (
+              <div className="loading-spinner"></div>
+            ) : showPasswordInput ? (
+              <>Sign In <FiArrowRight /></>
+            ) : (
+              <>Continue with Email <FiArrowRight /></>
+            )}
+          </button>
+        </motion.form>
+
+        <motion.button 
+          className="auth-toggle-btn"
+          onClick={() => setShowPasswordInput(!showPasswordInput)}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8, duration: 0.8 }}
         >
-          {showPassword ? 'Or use a magic link' : 'Or sign in with a password'}
-        </button>
+          {showPasswordInput ? 'Or use a magic link instead' : 'Or sign in with password'}
+        </motion.button>
 
-      </div>
+        <motion.div 
+          className="auth-features"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1, duration: 0.8 }}
+        >
+          <div className="feature-item">
+            <FiCpu />
+            <span>AI-Powered Search</span>
+          </div>
+          <div className="feature-item">
+            <FiLock />
+            <span>Secure & Private</span>
+          </div>
+        </motion.div>
+      </motion.div>
     </div>
   );
 }
