@@ -11,13 +11,22 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // --- CORS CONFIGURATION (Use your verified one) ---
-const allowedOrigins = [
-  'https://mindvault-zeta.vercel.app',
-  'http://localhost:5173'
-];
 const corsOptions = {
-  origin: function (origin, callback) {
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+  origin: (origin, callback) => {
+    // Regex to allow any subdomain of vercel.app for your project
+    const vercelPattern = /^https:\/\/mindvault.*\.vercel\.app$/;
+
+    // The unique origin for your Chrome extension
+    const extensionOrigin = 'chrome-extension://cjdeolopabbnjlcmpafkbhlibfjnknpc';
+
+    // The whitelist of allowed origins
+    const allowedOrigins = [
+      'http://localhost:5173',
+    ];
+
+    // Check if the incoming origin is in the whitelist, matches the Vercel pattern,
+    // or is the extension's origin. The `!origin` check allows for tools like Postman.
+    if (!origin || allowedOrigins.includes(origin) || vercelPattern.test(origin) || origin === extensionOrigin) {
       callback(null, true);
     } else {
       callback(new Error('This origin is not allowed by CORS policy.'));
@@ -25,6 +34,7 @@ const corsOptions = {
   },
   optionsSuccessStatus: 200
 };
+
 app.use(cors(corsOptions));
 // --- END CORS ---
 
