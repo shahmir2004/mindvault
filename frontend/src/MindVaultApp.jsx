@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from 'axios';
 import { motion } from 'framer-motion';
-import { supabase } from './supabaseClient';
+import { safeLogout } from './supabaseClient';
 import toast from 'react-hot-toast';
 import { FiLogOut, FiPlus, FiSearch, FiFileText, FiAlertCircle, FiLoader, FiCpu, FiUser, FiBookmark, FiTrendingUp } from 'react-icons/fi';
 
@@ -95,17 +95,15 @@ export default function MindVaultApp({ session }) {
     
     setIsLoggingOut(true);
     try {
-      const { error } = await supabase.auth.signOut();
+      const { error } = await safeLogout();
 
-      // We only care about unexpected errors.
-      // The 403 error is expected if the session is already expired, so we don't need to show it.
-      // The onAuthStateChange listener will handle the redirect regardless.
-      if (error && !error.message.includes('Auth session missing') && error.status !== 403) {
+      // Only show error for truly unexpected errors
+      if (error && !error.message?.includes('session_not_found') && error.status !== 403) {
         toast.error("Failed to log out.");
-        console.error("Logout Error: ", error);
+        console.error("Unexpected logout error: ", error);
       }
     } catch (err) {
-      console.error("Logout Exception: ", err);
+      console.error("Logout exception: ", err);
     }
     // Note: Don't set isLoggingOut to false here, let the auth state change handle it
   };

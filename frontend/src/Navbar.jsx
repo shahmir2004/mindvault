@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { supabase } from './supabaseClient';
+import { safeLogout } from './supabaseClient';
 import './Navbar.css';
 
 const Navbar = ({ session }) => {
@@ -11,10 +11,10 @@ const Navbar = ({ session }) => {
     
     setIsLoggingOut(true);
     try {
-      const { error } = await supabase.auth.signOut();
-      // Only log unexpected errors (not 403/session missing errors)
-      if (error && !error.message.includes('Auth session missing') && error.status !== 403) {
-        console.error('Logout error:', error);
+      const { error } = await safeLogout();
+      // Only log truly unexpected errors
+      if (error && !error.message?.includes('session_not_found') && error.status !== 403) {
+        console.error('Unexpected logout error:', error);
       }
     } catch (err) {
       console.error('Logout exception:', err);

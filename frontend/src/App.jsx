@@ -1,7 +1,7 @@
 // The NEW, correct, and final App.jsx
 import React, { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { supabase } from './supabaseClient';
+import { supabase, safeLogout } from './supabaseClient';
 import { Toaster } from 'react-hot-toast';
 
 import LandingPage from './LandingPage';
@@ -20,7 +20,7 @@ export default function App() {
     const urlParams = new URLSearchParams(window.location.search);
     if (urlParams.get('logout') === 'true' && !hasProcessedLogout) {
       setHasProcessedLogout(true);
-      supabase.auth.signOut().then(() => {
+      safeLogout().then(() => {
         // Clear the query parameter
         window.history.replaceState({}, document.title, window.location.pathname);
       }).catch((error) => {
