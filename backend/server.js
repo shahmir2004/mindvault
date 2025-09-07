@@ -1,5 +1,6 @@
 // backend/server.js
 require('dotenv').config();
+const scraperService = require('./scraperService');
 const express = require('express');
 const cors = require('cors');
 // We will now import createClient directly to make per-request clients
@@ -97,31 +98,57 @@ app.post('/api/items', async (req, res) => {
   const { url } = req.body;
   const user_id = req.user.id;
 
-  if (!url) return res.status(400).json({ error: "URL is required" });
+  if (!url) {
+    return res.status(400).json({ error: "URL is required" });
+  }
 
   try {
-    const { data: html } = await axios.get(url, { headers: { 'User-Agent': 'Mozilla/5.0' }});
-    const $ = cheerio.load(html);
-    const title = $('title').text();
-    $('script, style').remove();
-    const content = $('body').text().replace(/\s\s+/g, ' ').trim();
+    // Step 1: Fetch the raw HTML from the URL
+    const { data: html } = await axios.get(url, {
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+      }
+    });
 
-    if (!content) return res.status(400).json({ error: "Could not extract content." });
+    // Step 2: Use our new modular service to extract the clean article content
+    const article = scraperService.extractArticle(html, url);
 
-    // Use the per-request client to insert data
+    if (!article || !article.textContent) {
+      return res.status(400).json({ error: "Could not extract readable content from the URL." });
+    }
+
+    // Step 3: Save the CLEAN data to Supabase
     const { data: savedItem, error } = await req.supabase
       .from('items')
-      .insert([{ url, title, content, user_id }])
+      .insert([
+        { 
+          url: url,
+          title: article.title,         // Use the clean title from Readability
+          content: article.textContent, // Use the clean plain text for searching
+          user_id: user_id,
+        }
+      ])
       .select()
       .single();
 
-    if (error) throw new Error(error.message);
+    if (error) {
+      throw new Error(error.message); // Will be caught by the catch block
+    }
+
+    // Step 4: Return the newly created item
     res.status(201).json(savedItem);
+
   } catch (error) {
-    res.status(500).json({ error: `Failed to process URL. ${error.message}` });
+    // This will catch network errors (from axios) or database errors
+    console.error(`Failed to process URL ${url}:`, error.message);
+    let errorMessage = 'Failed to process URL.';
+    if(error.response && error.response.status) {
+        errorMessage = `Failed to fetch URL. Server responded with status ${error.response.status}.`
+    }
+    return res.status(500).json({ error: errorMessage });
   }
 });
-
 
 
 // SEARCH ITEMS (Now uses the user-scoped client)
