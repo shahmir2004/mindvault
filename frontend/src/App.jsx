@@ -15,6 +15,15 @@ export default function App() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    // Check for logout query parameter (from extension)
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('logout') === 'true') {
+      supabase.auth.signOut().then(() => {
+        // Clear the query parameter
+        window.history.replaceState({}, document.title, window.location.pathname);
+      });
+    }
+
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
       setLoading(false);
