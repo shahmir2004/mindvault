@@ -1,11 +1,26 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { supabase } from './supabaseClient';
 import './Navbar.css';
 
 const Navbar = ({ session }) => {
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
+
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (isLoggingOut) return; // Prevent multiple logout calls
+    
+    setIsLoggingOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      // Only log unexpected errors (not 403/session missing errors)
+      if (error && !error.message.includes('Auth session missing') && error.status !== 403) {
+        console.error('Logout error:', error);
+      }
+    } catch (err) {
+      console.error('Logout exception:', err);
+    } finally {
+      setIsLoggingOut(false);
+    }
   };
 
   return (
@@ -22,8 +37,12 @@ const Navbar = ({ session }) => {
           </li>
           {session ? (
             <li className="nav-item">
-              <button onClick={handleLogout} className="nav-links-btn">
-                Logout
+              <button 
+                onClick={handleLogout} 
+                className="nav-links-btn"
+                disabled={isLoggingOut}
+              >
+                {isLoggingOut ? 'Logging out...' : 'Logout'}
               </button>
             </li>
           ) : (

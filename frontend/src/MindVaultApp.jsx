@@ -91,19 +91,24 @@ export default function MindVaultApp({ session }) {
   };
 
   const handleLogout = async () => {
-  setIsLoggingOut(true);
-  const { error } = await supabase.auth.signOut();
+    if (isLoggingOut) return; // Prevent multiple logout calls
+    
+    setIsLoggingOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
 
-  // We only care about unexpected errors.
-  // The 403 error is expected if the session is already expired, so we don't need to show it.
-  // The onAuthStateChange listener will handle the redirect regardless.
-  if (error && error.message !== 'Auth session missing!') {
-    toast.error("Failed to log out.");
-    console.error("Logout Error: ", error);
-    setIsLoggingOut(false);
-  }
-  // No need for a success toast or navigation here. The listener in App.jsx handles it all.
-};
+      // We only care about unexpected errors.
+      // The 403 error is expected if the session is already expired, so we don't need to show it.
+      // The onAuthStateChange listener will handle the redirect regardless.
+      if (error && !error.message.includes('Auth session missing') && error.status !== 403) {
+        toast.error("Failed to log out.");
+        console.error("Logout Error: ", error);
+      }
+    } catch (err) {
+      console.error("Logout Exception: ", err);
+    }
+    // Note: Don't set isLoggingOut to false here, let the auth state change handle it
+  };
   const renderContent = () => {
     const displayItems = hasSearched ? searchResults : items;
     const isLoading = hasSearched ? isSearching : isLoadingItems;

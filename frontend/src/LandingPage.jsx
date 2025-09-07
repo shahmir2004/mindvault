@@ -142,13 +142,27 @@ const InteractiveDemo = () => {
 };
 
 export default function LandingPage() {
-  const particlesInit = useCallback(async (engine) => { await loadFull(engine); }, []);
+  const particlesInit = useCallback(async (engine) => { 
+    try {
+      await loadFull(engine); 
+    } catch (error) {
+      console.log('Particles initialization error (non-critical):', error);
+    }
+  }, []);
 
   return (
     <div className="page-container">
       {/* Hero Section with Enhanced Design */}
       <section className="hero-section">
-        <Particles id="tsparticles" init={particlesInit} options={particlesOptions} />
+        {/* Particles Background with error handling */}
+        {(() => {
+          try {
+            return <Particles id="tsparticles" init={particlesInit} options={particlesOptions} />;
+          } catch (error) {
+            console.log('Particles render error (non-critical):', error);
+            return null;
+          }
+        })()}
         
         {/* Floating Background Elements */}
         <div className="hero-background-elements">

@@ -13,13 +13,19 @@ import './index.css';
 export default function App() {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [hasProcessedLogout, setHasProcessedLogout] = useState(false);
 
   useEffect(() => {
     // Check for logout query parameter (from extension)
     const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('logout') === 'true') {
+    if (urlParams.get('logout') === 'true' && !hasProcessedLogout) {
+      setHasProcessedLogout(true);
       supabase.auth.signOut().then(() => {
         // Clear the query parameter
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }).catch((error) => {
+        // Ignore logout errors, just clear the parameter
+        console.log('Logout parameter processed, clearing URL');
         window.history.replaceState({}, document.title, window.location.pathname);
       });
     }
@@ -32,10 +38,11 @@ export default function App() {
     // This listener is the single source of truth.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
+      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [hasProcessedLogout]);
 
   if (loading) {
     return null;

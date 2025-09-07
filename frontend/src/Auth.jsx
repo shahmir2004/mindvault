@@ -16,7 +16,13 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [showPasswordInput, setShowPasswordInput] = useState(false);
   
-  const particlesInit = useCallback(async (engine) => { await loadFull(engine); }, []);
+  const particlesInit = useCallback(async (engine) => { 
+    try {
+      await loadFull(engine); 
+    } catch (error) {
+      console.log('Particles initialization error (non-critical):', error);
+    }
+  }, []);
 
   const handleMagicLinkLogin = async (e) => {
     e.preventDefault();
@@ -48,7 +54,15 @@ export default function Auth() {
 
   return (
     <div className="auth-container">
-      <Particles id="auth-particles" init={particlesInit} options={particlesOptions} />
+      {/* Wrap Particles in try-catch equivalent */}
+      {(() => {
+        try {
+          return <Particles id="auth-particles" init={particlesInit} options={particlesOptions} />;
+        } catch (error) {
+          console.log('Particles render error (non-critical):', error);
+          return null;
+        }
+      })()}
       
       {/* Floating Background Elements */}
       <div className="auth-background-elements">
